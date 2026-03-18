@@ -1,0 +1,226 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../app/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Plan {
+  id String @id @default(uuid())
+  name String //Bronze, Prata, Ouro
+  price Decimal @db.Decimal(10, 2)
+  description String?
+
+  tenants Tenant[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Tenant {
+  id String @id @default(uuid())
+  name String
+  slug String @unique
+  niche String?
+  status String
+  planId String
+  plan Plan @relation(fields: [planId], references: [id])
+  users User[]
+  ingredients Ingredient[]
+  products Product[]
+  orders Order[]
+  additionalItem AdditionalItem[]
+  stockMovements StockMovement[]
+  accessRequests AccessRequest[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model User {
+  id String @id @default(uuid())
+  name String?
+  email String? @unique
+  emailVerified DateTime?
+  image String?
+  passwordHash String?
+  role String @default("Proprietário")
+  tenantId String?
+  tenant Tenant? @relation(fields: [tenantId], references: [id])
+  orders Order[] // Vendas realizadas por este usuário
+  requests AccessRequest[] // Solicitações de acesso feitas por este usuário
+  accounts Account[]
+  sessions Session[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model AccessRequest {
+  id String @id @default(uuid())
+  userId String
+  tenantId String
+  status String @default("Pendente") // Pendente, Aprovado, Recusado
+  user User @relation(fields: [userId], references: [id])
+  tenant Tenant @relation(fields: [tenantId], references: [id])
+
+  createdAt DateTime @default(now())
+}
+
+// --- GESTÃO DE INVENTÁRIO ---
+
+enum ControlType {
+  PESO // kg/g
+  UNIDADE // un
+  FREQUENCIA // uso/checklist
+} 
+
+model Ingredient {
+  id  String @id @default(uuid())
+  name String
+  isTemplate Boolean @default(false)
+  nicheSuggest String?  // Sugestão baseada no nicho (ex: Hamburgueria)
+  tenantId String?
+  tenant Tenant? @relation(fields: [tenantId], references: [id])
+  metrics IngredientMetrics?
+  products ProductIngredient[]
+  movements StockMovement[]
+  additional AdditionalItem[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model IngredientMetrics {
+  ingredientId String @id
+  ingredient Ingredient @relation(fields: [ingredientId], references: [id])
+  timesUsed Int @default(0)
+}
+
+model StockMovement {
+  id String @id @default(uuid())
+  type String // Entrada, Saída, Ajuste
+  quantity Decimal @db.Decimal(10, 3)
+  reason String? // Ex: Venda do pedido #11
+  ingredientId String
+  ingredient Ingredient @relation(fields: [ingredientId], references: [id])
+  tenantId String
+  tenant Tenant @relation(fields: [tenantId], references: [id])
+  createdAt DateTime @default(now())
+}
+
+model Product {
+  id String @id @default(uuid())
+  name String 
+  description String?
+  salePrice Decimal @db.Decimal(10, 2)
+  category String? //Lanches, Bebidas
+  tenantId String
+  tenant Tenant @relation(fields: [tenantId], references: [id])
+  ingredients ProductIngredient[]
+  orderItems OrderItem[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model ProductIngredient {
+  productId String 
+  ingredientId String
+  controlType ControlType
+  quantityReq Decimal @db.Decimal(10, 3) // Ex: 0.150 para 150g
+  product Product @relation(fields: [productId], references: [id])
+  ingredient Ingredient @relation(fields: [ingredientId], references: [id])
+
+  @@id([productId, ingredientId])
+}
+
+model AdditionalItem {
+  id String @id @default(uuid())
+  name String
+  salePrice Decimal @db.Decimal(10, 2)
+  ingredientId String? // Opcional: se abater estoque (ex: Carne Extra)
+  ingredient Ingredient? @relation(fields: [ingredientId], references: [id])
+  tenantId String
+  tenant Tenant @relation(fields: [tenantId], references: [id])
+  orderItemAdditionals OrderItemAdditional[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// Operacional de vendas
+
+model Order {
+  id String @id @default(uuid())
+  totalAmount Decimal @db.Decimal(10, 2)
+  paymentType String? //Pix, Cartão
+  status String @default("Em preparo") // Em preparo, Em rota, Pronto, Finalizado, Cancelado
+  tenantId String
+  tenant Tenant @relation(fields: [tenantId], references: [id])
+  userId String
+  user User @relation(fields: [userId], references: [id])
+
+  items OrderItem[]
+  createdAt DateTime @default(now())
+}
+
+model OrderItem {
+  id String @id @default(uuid())
+  quantityItem Int
+  unitPriceHist Decimal @db.Decimal(10, 2) // Preço no momento da venda
+  orderId String
+  order Order @relation(fields: [orderId], references: [id])
+  productId String
+  product Product @relation(fields: [productId], references: [id])
+  additionals OrderItemAdditional[]
+}
+
+model OrderItemAdditional {
+  id String @id @default(uuid())
+  priceHist Decimal @db.Decimal(10, 2)
+  orderItemId String
+  orderItem OrderItem @relation(fields: [orderItemId], references: [id])
+  additionalId String
+  additional AdditionalItem @relation(fields: [additionalId], references: [id])
+}
+
+// --- TABELAS EXIGIDAS PELO AUTH.JS (GOOGLE LOGIN) ---
+
+
+model Account {
+  id String @id @default(uuid())
+  userId String
+  type String
+  provider String 
+  providerAccountId String 
+  refresh_token String? @db.Text
+  access_token String? @db.Text
+  expires_at Int?
+  token_type String?
+  scope String?
+  id_token String? @db.Text
+  session_state String? 
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+@@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
