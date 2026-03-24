@@ -1,5 +1,9 @@
 @import "tailwindcss";
 
+.login-page {
+  background: #f4ede4;
+}
+
 @theme {
   --color-background: hsl(var(--background));
   --color-foreground: hsl(var(--foreground));
