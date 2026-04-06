@@ -1,4 +1,4 @@
-"use clent";
+"use client";
 
 import {
   Form,
@@ -17,19 +17,18 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import z from "zod";
 import { signInGoogleAction } from "@/app/actions/auth/sign-in-google";
-import Image from "next/image";
 import { useRouter } from "next/navigation";
+import { useState } from "react";
+import { EyeIcon, EyeClosedIcon } from "lucide-react";
 
 const LoginForm = () => {
   type LoginFormData = z.infer<typeof loginSchema>;
   const router = useRouter();
+  const [isPasswordVisible, setIsPasswordVisible] = useState(false);
   const form = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
     mode: "onChange",
-    defaultValues: {
-      email: "",
-      password: "",
-    },
+    defaultValues: { email: "", password: "" },
   });
 
   const {
@@ -42,69 +41,11 @@ const LoginForm = () => {
     formData.append("email", data.email);
     formData.append("password", data.password);
     const result = await signInCredentials(formData);
-    if (result.success === false) {
-      return toast.error(result.message);
-    }
+    if (result.success === false) return toast.error(result.message);
     router.replace("/");
   };
+
   return (
-    // <Form {...form}>
-    //   <form
-    //     onSubmit={handleSubmit(onSubmit)}
-    //     className="flex flex-col gap-8 w-full px-12 text-lg"
-    //   >
-    //     <FormField
-    //       control={form.control}
-    //       name="email"
-    //       render={({ field }) => (
-    //         <FormItem>
-    //           <FormLabel>Email</FormLabel>
-    //           <FormControl>
-    //             <Input
-    //               placeholder="Insira o seu email"
-    //               {...field}
-    //               disabled={isSubmitting}
-    //               name="email"
-    //               className="border-zinc-400 py-4"
-    //             />
-    //           </FormControl>
-    //           <FormMessage />
-    //         </FormItem>
-    //       )}
-    //     />
-
-    //     <FormField
-    //       control={form.control}
-    //       name="password"
-    //       render={({ field }) => (
-    //         <FormItem>
-    //           <FormLabel>Senha</FormLabel>
-    //           <FormControl>
-    //             <Input
-    //               placeholder="Insira sua senha"
-    //               {...field}
-    //               name="password"
-    //               disabled={isSubmitting}
-    //               className="border-zinc-400 py-4"
-    //             />
-    //           </FormControl>
-    //           <FormMessage />
-    //           <a href="" className="text-[14px] ml-auto">
-    //             Esqueceu a sua senha?
-    //           </a>
-    //         </FormItem>
-    //       )}
-    //     />
-    //     <Button
-    //       size={"lg"}
-    //       disabled={!isValid || isSubmitting}
-    //       className="hover:bg-amber-500 text-lg"
-    //     >
-    //       Entrar
-    //     </Button>
-    //   </form>
-    // </Form>
-
     <div className="w-full flex flex-col gap-4">
       <Form {...form}>
         <form
@@ -116,9 +57,7 @@ const LoginForm = () => {
             name="email"
             render={({ field }) => (
               <FormItem>
-                <FormLabel
-                  style={{ color: "#444", fontSize: "13px", fontWeight: 500 }}
-                >
+                <FormLabel className="text-muted-foreground text-[13px] font-medium">
                   Email
                 </FormLabel>
                 <FormControl>
@@ -126,42 +65,38 @@ const LoginForm = () => {
                     placeholder="seu@email.com"
                     {...field}
                     disabled={isSubmitting}
-                    className="py-4"
-                    style={{
-                      border: "1.5px solid #e8ddd4",
-                      background: "#fdfaf8",
-                      borderRadius: "10px",
-                    }}
+                    className="py-4 bg-input border-border text-foreground placeholder:text-muted-foreground rounded-[10px] focus:border-primary"
                   />
                 </FormControl>
                 <FormMessage />
               </FormItem>
             )}
           />
-
           <FormField
             control={form.control}
             name="password"
             render={({ field }) => (
               <FormItem>
-                <FormLabel
-                  style={{ color: "#444", fontSize: "13px", fontWeight: 500 }}
-                >
+                <FormLabel className="text-muted-foreground text-[13px] font-medium">
                   Senha
                 </FormLabel>
                 <FormControl>
-                  <Input
-                    placeholder="••••••••"
-                    type="password"
-                    {...field}
-                    disabled={isSubmitting}
-                    className="py-4"
-                    style={{
-                      border: "1.5px solid #e8ddd4",
-                      background: "#fdfaf8",
-                      borderRadius: "10px",
-                    }}
-                  />
+                  <div className="relative">
+                    <Input
+                      placeholder="••••••••"
+                      type={isPasswordVisible ? "text" : "password"}
+                      {...field}
+                      disabled={isSubmitting}
+                      className="py-4 pr-10 bg-input border-border text-foreground placeholder:text-muted-foreground rounded-[10px] focus:border-primary"
+                    />
+                    <button
+                      type="button"
+                      className="absolute inset-y-0 right-0 pr-3 cursor-pointer"
+                      onClick={() => setIsPasswordVisible(!isPasswordVisible)}
+                    >
+                      {isPasswordVisible ? <EyeIcon /> : <EyeClosedIcon />}
+                    </button>
+                  </div>
                 </FormControl>
                 <FormMessage />
                 <a
@@ -173,12 +108,10 @@ const LoginForm = () => {
               </FormItem>
             )}
           />
-
           <Button
             size="lg"
             disabled={!isValid || isSubmitting}
-            className="w-full hover:bg-amber-600 text-base font-semibold mt-1"
-            style={{ borderRadius: "10px" }}
+            className="w-full bg-primary hover:bg-primary/90 text-primary-foreground text-base font-semibold mt-1 rounded-[10px]"
           >
             Entrar
           </Button>
@@ -186,32 +119,18 @@ const LoginForm = () => {
       </Form>
 
       <div className="relative flex items-center my-1">
-        <div className="flex-1 h-px" style={{ background: "#f0e8df" }} />
-        <span className="mx-3 text-xs" style={{ color: "#aaa" }}>
-          OU
-        </span>
-        <div className="flex-1 h-px" style={{ background: "#f0e8df" }} />
+        <div className="flex-1 h-px bg-border" />
+        <span className="mx-3 text-xs text-muted-foreground">OU</span>
+        <div className="flex-1 h-px bg-border" />
       </div>
 
       <form action={signInGoogleAction}>
         <Button
           variant="outline"
           size="lg"
-          className="w-full text-base font-medium gap-2"
-          style={{
-            border: "1.5px solid #e8ddd4",
-            background: "#fdfaf8",
-            borderRadius: "10px",
-            color: "#333",
-          }}
+          className="w-full text-base font-medium gap-2 bg-secondary border-border text-foreground hover:bg-secondary/80 rounded-[10px]"
         >
           Entrar com Google
-          <Image
-            src={"/images/google.svg"}
-            width={18}
-            height={18}
-            alt="Google"
-          />
         </Button>
       </form>
     </div>
