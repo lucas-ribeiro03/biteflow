@@ -132,7 +132,7 @@ model ProductIngredient {
   productId String 
   ingredientId String
   controlType ControlType
-  quantityReq Decimal @db.Decimal(10, 3) // Ex: 0.150 para 150g
+  quantityReq Decimal @db.Decimal(10, 0) // Ex: 0.150 para 150g
   product Product @relation(fields: [productId], references: [id])
   ingredient Ingredient @relation(fields: [ingredientId], references: [id])
 
