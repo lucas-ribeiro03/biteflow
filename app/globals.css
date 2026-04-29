@@ -1,9 +1,5 @@
 @import "tailwindcss";
 
-.login-page {
-  background: #f4ede4;
-}
-
 @theme {
   --color-background: hsl(var(--background));
   --color-foreground: hsl(var(--foreground));
@@ -17,7 +13,6 @@
   --color-destructive: hsl(var(--destructive));
   --color-destructive-foreground: hsl(var(--destructive-foreground));
 
-  /* Adicione o Success para seus Dashboards */
   --color-success: hsl(var(--success));
   --color-success-foreground: hsl(var(--success-foreground));
 
@@ -27,6 +22,9 @@
   --color-accent: hsl(var(--accent));
   --color-accent-foreground: hsl(var(--accent-foreground));
 
+  --color-card: hsl(var(--card));
+  --color-card-foreground: hsl(var(--card-foreground));
+
   --color-border: hsl(var(--border));
   --color-input: hsl(var(--input));
   --color-ring: hsl(var(--ring));
@@ -34,14 +32,17 @@
 
 @layer base {
   :root {
-    --background: 210 40% 98%;
-    --foreground: 222 47% 11%;
+    --background: 20 14% 8%; /* #1a1208 — fundo escuro quente */
+    --foreground: 40 20% 92%; /* texto claro */
 
-    --primary: 24 95% 53%; /* #EA580C */
+    --card: 25 20% 12%; /* #231808 — cards escuros */
+    --card-foreground: 40 20% 92%;
+
+    --primary: 24 95% 53%; /* #EA580C — laranja */
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 38 92% 50%; /* #F59E0B */
-    --secondary-foreground: 222 47% 11%;
+    --secondary: 25 18% 18%; /* superfície secundária */
+    --secondary-foreground: 40 20% 80%;
 
     --success: 161 94% 30%;
     --success-foreground: 0 0% 100%;
@@ -49,9 +50,25 @@
     --destructive: 346 84% 61%;
     --destructive-foreground: 210 40% 98%;
 
-    --border: 214 32% 91%;
-    --input: 214 32% 91%;
+    --muted: 25 15% 15%;
+    --muted-foreground: 30 10% 55%;
+
+    --accent: 24 95% 53%;
+    --accent-foreground: 0 0% 100%;
+
+    --border: 25 18% 20%; /* bordas sutis no escuro */
+    --input: 25 18% 16%;
     --ring: 24 95% 53%;
     --radius: 0.5rem;
+  }
+}
+
+@layer base {
+  * {
+    border-color: hsl(var(--border));
+  }
+  body {
+    background-color: hsl(var(--background));
+    color: hsl(var(--foreground));
   }
 }
