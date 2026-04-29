@@ -23,10 +23,21 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   callbacks: {
     async session({ session, token }) {
       if (token.sub) session.user.id = token.sub;
+      const dbUser = await prisma.user.findUnique({
+        where: { id: token.sub },
+      });
+
+      session.user.tenantId = dbUser.tenantId ?? null;
       return session;
     },
     async jwt({ token, user }) {
-      if (user) token.id = user.id;
+      if (user) {
+        const dbUser = await prisma.user.findUnique({
+          where: { email: user.email },
+        });
+        token.id = user.id;
+        token.tenantId = dbUser.tenantId ?? null;
+      }
       return token;
     },
   },
@@ -42,4 +53,18 @@ export const verifyPassword = async (email: string, password: string) => {
   const isValid = await bcrypt.compare(password, user.passwordHash);
   if (!isValid) return null;
   return user;
+};
+
+export const getUserTenant = async (id: string) => {
+  const user = await prisma.user.findUnique({
+    where: { id },
+  });
+
+  if (!user) return null;
+
+  const tenant = await prisma.tenant.findUnique({
+    where: { id: user.tenantId },
+  });
+
+  return tenant;
 };
